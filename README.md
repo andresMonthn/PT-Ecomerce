@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Prueba técnica – Catálogo y carrito
 
-## Getting Started
+## Objetivo del proyecto
 
-First, run the development server:
+- Construir un catálogo de productos con detalle y carrito de compras.
+- Cuidar la experiencia móvil: menú hamburguesa, tema oscuro y corrección de `100vh`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Tecnologías usadas
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js (App Router) y React 18 con TypeScript.
+- Tailwind CSS v4 (utilidades vía `@import "tailwindcss"`).
+- `next/font` con familias Geist.
+- API pública FakeStore para productos.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cómo iniciar el repo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Requisitos: Node.js 18+ y npm.
+- Instalar dependencias: `npm install`.
+- Desarrollo: `npm run dev` y abrir `http://localhost:3000`.
+- Producción: `npm run build` y `npm start`.
 
-## Learn More
+## Funciones implementadas
 
-To learn more about Next.js, take a look at the following resources:
+- Listado de productos con filtro de categorías (`src/app/productos/page.tsx:21`).
+- Detalle de producto (`src/app/productos/[id]/page.tsx`).
+- Carrito con persistencia en `localStorage` y badge de cantidad (`src/components/cart/CartProvider.tsx:58`, `src/components/cart/CartBadge.tsx:6`).
+- Animación “fly to cart” al agregar (`src/components/AddToCartButton.tsx:19`).
+- Tema oscuro/claro con persistencia y cookie (`src/components/theme/ThemeProvider.tsx:18`, `src/components/theme/ThemeProvider.tsx:28`).
+- Encabezado que detecta scroll y aplica blur (`src/components/Encabezado.tsx:13`, `src/components/Encabezado.tsx:50`).
+- Menú hamburguesa móvil con opciones de tema y acceso al carrito (`src/components/Encabezado.tsx:67`).
+- Corrección de `viewport` en móviles vía variables `--vh`/`--vw` (`src/app/layout.tsx:43`).
+- Paddings laterales móviles en `px` (`src/app/layout.tsx:49`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estructura del repo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Rutas (App Router): `src/app/*` con páginas de catálogo, detalle y carrito.
+- Componentes UI: `src/components/*` (tarjetas, filtros, encabezado y pie).
+- Estado de tema y carrito: `src/components/theme/ThemeProvider.tsx`, `src/components/cart/CartProvider.tsx`.
+- Cliente API y tipos: `src/lib/api.ts`.
+- Estilos globales y utilidades: `src/app/globals.css`.
 
-## Deploy on Vercel
+## Decisiones técnicas / arquitectura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Context API para tema y carrito; persistencia en `localStorage` y cookie para el tema (`src/components/theme/ThemeProvider.tsx:33`).
+- Normalización de imagenes de FakeStore para robustez (`src/lib/api.ts:44`).
+- Corrección de `100vh` en iOS/Android con variables `--vh`/`--vw` y `beforeInteractive` (`src/app/layout.tsx:43`, `src/app/globals.css:31`).
+- Tailwind v4 sin configuración explícita, utilidades en CSS y clases en JSX.
+- Detección de scroll en contenedor `.app-scroll` y ventana con `Math.max` (`src/components/Encabezado.tsx:15`, `src/components/Encabezado.tsx:18`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notas finales
+
+- Limitaciones:
+  - API pública sin caché; tiempos de respuesta variables.
+  - Carga simulada en catálogo para demostrar estados (`src/app/productos/page.tsx:9`).
+  - Accesibilidad básica en menú y filtros; falta pulir ARIA.
+- Qué mejorarías si tuvieras más tiempo:
+  - Tests unitarios e integración; verificación de accesibilidad.
+  - Skeletons/placeholder y prefetch en navegación.
+  - i18n, SEO meta y breadcrumbs.
+  - Caché en cliente/servidor y Retry/Toast de errores.
+- Observaciones:
+  - Arquitectura modular y responsabilidades claras.
+  - Enfoque mobile-first y estado global mínimo.
+  - Sin dependencias pesadas adicionales.
