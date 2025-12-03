@@ -37,11 +37,15 @@ async function fetchWithRetry(url: string, init: RequestInit & { attempts?: numb
     try {
       const res = await fetch(url, {
         ...init,
-        headers: { accept: 'application/json', ...(init.headers ?? {}) },
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+          'accept-language': 'es-ES,es;q=0.9,en;q=0.8',
+          ...(init.headers ?? {}),
+        },
         cache: init.cache ?? 'no-store',
         signal: mergeSignals(init.signal, ac.signal),
-        // ts-expect-error next runtime hint
-        next: (init as any).next ?? { revalidate: 300 },
+        next: (init as any).next ?? { revalidate: 300 } as any,
       });
       clearTimeout(timer);
       return res;
