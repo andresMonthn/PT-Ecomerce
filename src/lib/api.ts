@@ -8,7 +8,51 @@ export type Product = {
   rating?: { rate: number; count: number };
 };
 
-const BASE = "https://fakestoreapi.com";
+const BASE = process.env.FAKESTORE_BASE ?? "https://fakestoreapi.com";
+
+const DEFAULT_TIMEOUT_MS = Number(process.env.FETCH_TIMEOUT_MS ?? 5000);
+
+function mergeSignals(a?: AbortSignal | null, b?: AbortSignal | null): AbortSignal | undefined {
+  if (!a && !b) return undefined;
+  if (a && !b) return a as AbortSignal;
+  if (!a && b) return b as AbortSignal;
+  const c = new AbortController();
+  const onAbort = () => {
+    try { c.abort(); } catch {}
+  };
+  (a as AbortSignal).addEventListener('abort', onAbort, { once: true });
+  (b as AbortSignal).addEventListener('abort', onAbort, { once: true });
+  return c.signal;
+}
+
+async function fetchWithRetry(url: string, init: RequestInit & { attempts?: number; timeoutMs?: number } = {}) {
+  const attempts = init.attempts ?? 3;
+  const timeoutMs = init.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  let lastErr: unknown = null;
+  for (let i = 0; i < attempts; i++) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => {
+      try { ac.abort('timeout'); } catch {}
+    }, timeoutMs);
+    try {
+      const res = await fetch(url, {
+        ...init,
+        headers: { accept: 'application/json', ...(init.headers ?? {}) },
+        cache: init.cache ?? 'no-store',
+        signal: mergeSignals(init.signal, ac.signal),
+        // ts-expect-error next runtime hint
+        next: (init as any).next ?? { revalidate: 300 },
+      });
+      clearTimeout(timer);
+      return res;
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
 
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -19,24 +63,24 @@ async function handle<T>(res: Response): Promise<T> {
 }
 
 export async function getProducts(signal?: AbortSignal): Promise<Product[]> {
-  const res = await fetch(`${BASE}/products`, { cache: "no-store", signal });
+  const res = await fetchWithRetry(`${BASE}/products`, { cache: "no-store", signal, attempts: 3 });
   const data = await handle<Product[]>(res);
   return data.map(normalizeProduct);
 }
 
 export async function getProduct(id: string, signal?: AbortSignal): Promise<Product> {
-  const res = await fetch(`${BASE}/products/${id}`, { cache: "no-store", signal });
+  const res = await fetchWithRetry(`${BASE}/products/${id}`, { cache: "no-store", signal, attempts: 3 });
   const data = await handle<Product>(res);
   return normalizeProduct(data);
 }
 
 export async function getCategories(signal?: AbortSignal): Promise<string[]> {
-  const res = await fetch(`${BASE}/products/categories`, { cache: "no-store", signal });
+  const res = await fetchWithRetry(`${BASE}/products/categories`, { cache: "no-store", signal, attempts: 3 });
   return handle<string[]>(res);
 }
 
 export async function getProductsByCategory(category: string, signal?: AbortSignal): Promise<Product[]> {
-  const res = await fetch(`${BASE}/products/category/${encodeURIComponent(category)}`, { cache: "no-store", signal });
+  const res = await fetchWithRetry(`${BASE}/products/category/${encodeURIComponent(category)}`, { cache: "no-store", signal, attempts: 3 });
   const data = await handle<Product[]>(res);
   return data.map(normalizeProduct);
 }

@@ -26,3 +26,4 @@ export default async function ProductsPage(props: { searchParams: Promise<Record
     </div>
   )
 }
+export const dynamic = 'force-dynamic'

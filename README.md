@@ -16,8 +16,13 @@
 
 - Requisitos: Node.js 18+ y npm.
 - Instalar dependencias: `npm install`.
-- Desarrollo: `npm run dev` y abrir `http://localhost:3000`.
-- Producción: `npm run build` y `npm start`.
+- Desarrollo (convencional): `npm run dev` y abrir `http://localhost:3000`.
+- Desarrollo (Windows con `&` en la ruta): `node .\\node_modules\\next\\dist\\bin\\next dev`.
+- Puerto alterno (PowerShell): `$env:PORT=3001; node .\\node_modules\\next\\dist\\bin\\next dev`.
+- Producción: `node .\\node_modules\\next\\dist\\bin\\next build` y `node .\\node_modules\\next\\dist\\bin\\next start -p 3000`.
+- Variables de entorno (opcional):
+  - `.env.local`: `FAKESTORE_BASE=https://fakestoreapi.com`, `FETCH_TIMEOUT_MS=5000`.
+  - En Vercel, define estas variables en Project Settings → Environment Variables.
 
 ## Funciones implementadas
 

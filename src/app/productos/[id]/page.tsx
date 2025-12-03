@@ -29,3 +29,4 @@ export default async function ProductDetail(props: { params: Promise<{ id: strin
     </main>
   )
 }
+export const dynamic = 'force-dynamic'
